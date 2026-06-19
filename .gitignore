@@ -1,23 +1,54 @@
-# build output
+# Build output
 dist/
-.vercel/
 .output/
+.vercel/
 
-# dependencies
+# Dependencies
 node_modules/
+.pnpm-store/
 
-# astro
+# Astro
 .astro/
 
-# environment
-.env
-.env.production
+# Test coverage
+coverage/
 
-# logs
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# AI tools
+.claude/
+.cursor/
+.cursorignore
+.windsurf/
+.aider*
+.continue/
+.codeium/
+.copilot/
+*.aider.tags.cache.v3/
+CLAUDE.md
+ROADMAP.md
+
+# Logs
+*.log
 npm-debug.log*
 pnpm-debug.log*
 
-# os / editor
-.DS_Store
-Thumbs.db
-.vscode/
+# Misc
+*.tsbuildinfo
