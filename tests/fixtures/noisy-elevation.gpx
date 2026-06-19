@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1"
+     version="1.1" creator="synthetic-fixture">
+  <metadata>
+    <name>Noisy Elevation Fixture</name>
+    <desc>41 points, straight north. True elevation is constant 1650m; the ele values carry deterministic GPS jitter (true gain 0m). Tests that smoothing rejects noise. No HR/cadence.</desc>
+  </metadata>
+  <trk>
+    <name>Noisy Elevation</name>
+    <trkseg>
+      <trkpt lat="40.00000" lon="-105.00000">
+        <ele>1652.1</ele>
+        <time>2024-01-15T08:00:00Z</time>
+      </trkpt>
+      <trkpt lat="40.00050" lon="-105.00000">
+        <ele>1656.4</ele>
+        <time>2024-01-15T08:00:05Z</time>
+      </trkpt>
+      <trkpt lat="40.00100" lon="-105.00000">
+        <ele>1649.7</ele>
+        <time>2024-01-15T08:00:10Z</time>
+      </trkpt>
+      <trkpt lat="40.00150" lon="-105.00000">
+        <ele>1645.2</ele>
+        <time>2024-01-15T08:00:15Z</time>
+      </trkpt>
+      <trkpt lat="40.00200" lon="-105.00000">
+        <ele>1649.2</ele>
+        <time>2024-01-15T08:00:20Z</time>
+      </trkpt>
+      <trkpt lat="40.00250" lon="-105.00000">
+        <ele>1651.7</ele>
+        <time>2024-01-15T08:00:25Z</time>
+      </trkpt>
+      <trkpt lat="40.00300" lon="-105.00000">
+        <ele>1647.1</ele>
+        <time>2024-01-15T08:00:30Z</time>
+      </trkpt>
+      <trkpt lat="40.00350" lon="-105.00000">
+        <ele>1650.1</ele>
+        <time>2024-01-15T08:00:35Z</time>
+      </trkpt>
+      <trkpt lat="40.00400" lon="-105.00000">
+        <ele>1655.3</ele>
+        <time>2024-01-15T08:00:40Z</time>
+      </trkpt>
+      <trkpt lat="40.00450" lon="-105.00000">
+        <ele>1652.9</ele>
+        <time>2024-01-15T08:00:45Z</time>
+      </trkpt>
+      <trkpt lat="40.00500" lon="-105.00000">
+        <ele>1644.2</ele>
+        <time>2024-01-15T08:00:50Z</time>
+      </trkpt>
+      <trkpt lat="40.00550" lon="-105.00000">
+        <ele>1647.6</ele>
+        <time>2024-01-15T08:00:55Z</time>
+      </trkpt>
+      <trkpt lat="40.00600" lon="-105.00000">
+        <ele>1651.5</ele>
+        <time>2024-01-15T08:01:00Z</time>
+      </trkpt>
+      <trkpt lat="40.00650" lon="-105.00000">
+        <ele>1650.7</ele>
+        <time>2024-01-15T08:01:05Z</time>
+      </trkpt>
+      <trkpt lat="40.00700" lon="-105.00000">
+        <ele>1647.4</ele>
+        <time>2024-01-15T08:01:10Z</time>
+      </trkpt>
+      <trkpt lat="40.00750" lon="-105.00000">
+        <ele>1654.6</ele>
+        <time>2024-01-15T08:01:15Z</time>
+      </trkpt>
+      <trkpt lat="40.00800" lon="-105.00000">
+        <ele>1653.3</ele>
+        <time>2024-01-15T08:01:20Z</time>
+      </trkpt>
+      <trkpt lat="40.00850" lon="-105.00000">
+        <ele>1647.2</ele>
+        <time>2024-01-15T08:01:25Z</time>
+      </trkpt>
+      <trkpt lat="40.00900" lon="-105.00000">
+        <ele>1643.6</ele>
+        <time>2024-01-15T08:01:30Z</time>
+      </trkpt>
+      <trkpt lat="40.00950" lon="-105.00000">
+        <ele>1652.5</ele>
+        <time>2024-01-15T08:01:35Z</time>
+      </trkpt>
+      <trkpt lat="40.01000" lon="-105.00000">
+        <ele>1651.4</ele>
+        <time>2024-01-15T08:01:40Z</time>
+      </trkpt>
+      <trkpt lat="40.01050" lon="-105.00000">
+        <ele>1649.7</ele>
+        <time>2024-01-15T08:01:45Z</time>
+      </trkpt>
+      <trkpt lat="40.01100" lon="-105.00000">
+        <ele>1650.0</ele>
+        <time>2024-01-15T08:01:50Z</time>
+      </trkpt>
+      <trkpt lat="40.01150" lon="-105.00000">
+        <ele>1655.9</ele>
+        <time>2024-01-15T08:01:55Z</time>
+      </trkpt>
+      <trkpt lat="40.01200" lon="-105.00000">
+        <ele>1647.5</ele>
+        <time>2024-01-15T08:02:00Z</time>
+      </trkpt>
+      <trkpt lat="40.01250" lon="-105.00000">
+        <ele>1644.8</ele>
+        <time>2024-01-15T08:02:05Z</time>
+      </trkpt>
+      <trkpt lat="40.01300" lon="-105.00000">
+        <ele>1647.9</ele>
+        <time>2024-01-15T08:02:10Z</time>
+      </trkpt>
+      <trkpt lat="40.01350" lon="-105.00000">
+        <ele>1655.5</ele>
+        <time>2024-01-15T08:02:15Z</time>
+      </trkpt>
+      <trkpt lat="40.01400" lon="-105.00000">
+        <ele>1649.0</ele>
+        <time>2024-01-15T08:02:20Z</time>
+      </trkpt>
+      <trkpt lat="40.01450" lon="-105.00000">
+        <ele>1650.4</ele>
+        <time>2024-01-15T08:02:25Z</time>
+      </trkpt>
+      <trkpt lat="40.01500" lon="-105.00000">
+        <ele>1651.9</ele>
+        <time>2024-01-15T08:02:30Z</time>
+      </trkpt>
+      <trkpt lat="40.01550" lon="-105.00000">
+        <ele>1652.6</ele>
+        <time>2024-01-15T08:02:35Z</time>
+      </trkpt>
+      <trkpt lat="40.01600" lon="-105.00000">
+        <ele>1642.7</ele>
+        <time>2024-01-15T08:02:40Z</time>
+      </trkpt>
+      <trkpt lat="40.01650" lon="-105.00000">
+        <ele>1648.1</ele>
+        <time>2024-01-15T08:02:45Z</time>
+      </trkpt>
+      <trkpt lat="40.01700" lon="-105.00000">
+        <ele>1652.8</ele>
+        <time>2024-01-15T08:02:50Z</time>
+      </trkpt>
+      <trkpt lat="40.01750" lon="-105.00000">
+        <ele>1654.5</ele>
+        <time>2024-01-15T08:02:55Z</time>
+      </trkpt>
+      <trkpt lat="40.01800" lon="-105.00000">
+        <ele>1646.8</ele>
+        <time>2024-01-15T08:03:00Z</time>
+      </trkpt>
+      <trkpt lat="40.01850" lon="-105.00000">
+        <ele>1652.4</ele>
+        <time>2024-01-15T08:03:05Z</time>
+      </trkpt>
+      <trkpt lat="40.01900" lon="-105.00000">
+        <ele>1650.9</ele>
+        <time>2024-01-15T08:03:10Z</time>
+      </trkpt>
+      <trkpt lat="40.01950" lon="-105.00000">
+        <ele>1647.7</ele>
+        <time>2024-01-15T08:03:15Z</time>
+      </trkpt>
+      <trkpt lat="40.02000" lon="-105.00000">
+        <ele>1643.3</ele>
+        <time>2024-01-15T08:03:20Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
