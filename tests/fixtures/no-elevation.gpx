@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1"
+     version="1.1" creator="synthetic-fixture">
+  <metadata>
+    <name>No Elevation Fixture</name>
+    <desc>10 points, straight north, no ele elements. Tests graceful degradation when elevation data is absent.</desc>
+  </metadata>
+  <trk>
+    <name>No Elevation</name>
+    <trkseg>
+      <trkpt lat="51.50000" lon="-0.12000">
+        <time>2024-03-10T10:00:00Z</time>
+      </trkpt>
+      <trkpt lat="51.50100" lon="-0.12000">
+        <time>2024-03-10T10:00:45Z</time>
+      </trkpt>
+      <trkpt lat="51.50200" lon="-0.12000">
+        <time>2024-03-10T10:01:30Z</time>
+      </trkpt>
+      <trkpt lat="51.50300" lon="-0.12000">
+        <time>2024-03-10T10:02:15Z</time>
+      </trkpt>
+      <trkpt lat="51.50400" lon="-0.12000">
+        <time>2024-03-10T10:03:00Z</time>
+      </trkpt>
+      <trkpt lat="51.50500" lon="-0.12000">
+        <time>2024-03-10T10:03:45Z</time>
+      </trkpt>
+      <trkpt lat="51.50600" lon="-0.12000">
+        <time>2024-03-10T10:04:30Z</time>
+      </trkpt>
+      <trkpt lat="51.50700" lon="-0.12000">
+        <time>2024-03-10T10:05:15Z</time>
+      </trkpt>
+      <trkpt lat="51.50800" lon="-0.12000">
+        <time>2024-03-10T10:06:00Z</time>
+      </trkpt>
+      <trkpt lat="51.50900" lon="-0.12000">
+        <time>2024-03-10T10:06:45Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
