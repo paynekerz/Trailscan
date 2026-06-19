@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { Analyzer } from "../components/Analyzer";
 ---
 
 <!doctype html>
@@ -26,11 +27,9 @@ import "../styles/global.css";
         heart-rate when it's there. Everything runs in your browser &mdash; the
         file never leaves your device.
       </p>
-      <span
-        class="rounded-full border border-border-subtle bg-surface-elevated px-4 py-1.5 text-sm text-on-surface-variant"
-      >
-        Scaffold ready &middot; analyzer coming next
-      </span>
+      <div class="w-full">
+        <Analyzer client:load />
+      </div>
     </main>
   </body>
 </html>

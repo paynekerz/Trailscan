@@ -42,8 +42,8 @@ desktop.ini
 .codeium/
 .copilot/
 *.aider.tags.cache.v3/
-CLAUDE.md
-ROADMAP.md
+.CLAUDE.md
+.ROADMAP.md
 
 # Logs
 *.log
