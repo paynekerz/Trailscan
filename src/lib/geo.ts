@@ -18,6 +18,28 @@ export function haversine(a: LatLon, b: LatLon): number {
   return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
 }
 
+// Nth-point downsampling for render arrays. Always preserves first and last
+// points so the track start/finish stay accurate. Use for polyline rendering
+// only — run metrics against the full-resolution array.
+export function downsample<T>(items: T[], maxPoints: number): T[] {
+  if (items.length <= maxPoints) return items;
+  const step = (items.length - 1) / (maxPoints - 1);
+  const result: T[] = [];
+  for (let i = 0; i < maxPoints; i++) {
+    result.push(items[Math.round(i * step)]);
+  }
+  return result;
+}
+
+export function cumulativeDistances(points: Array<{ lat: number; lon: number }>): number[] {
+  const out = new Array<number>(points.length);
+  out[0] = 0;
+  for (let i = 1; i < points.length; i++) {
+    out[i] = out[i - 1] + haversine(points[i - 1], points[i]);
+  }
+  return out;
+}
+
 // Centered moving average. The window shrinks symmetrically at the edges
 // (radius = min(radius, i, n-1-i)) so a perfectly linear input is returned
 // unchanged. A naive edge-clamped average would pull the first/last samples

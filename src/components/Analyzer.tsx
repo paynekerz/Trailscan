@@ -1,15 +1,39 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DropZone } from './DropZone';
+import { RouteMap } from './RouteMap';
+import { ElevationChart } from './ElevationChart';
 import { parseGpx } from '../lib/parse';
+import { downsample } from '../lib/geo';
 import type { TrackPoint } from '../types';
+
+const MAX_RENDER_POINTS = 2000;
 
 export function Analyzer() {
   const [points, setPoints] = useState<TrackPoint[] | null>(null);
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const renderPoints = useMemo(
+    () => (points ? downsample(points, MAX_RENDER_POINTS) : []),
+    [points],
+  );
+
+  const bounds = useMemo<[[number, number], [number, number]] | null>(() => {
+    if (!points) return null;
+    let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+    for (const p of points) {
+      if (p.lat < minLat) minLat = p.lat;
+      if (p.lat > maxLat) maxLat = p.lat;
+      if (p.lon < minLon) minLon = p.lon;
+      if (p.lon > maxLon) maxLon = p.lon;
+    }
+    return [[minLat, minLon], [maxLat, maxLon]];
+  }, [points]);
 
   const handleFile = (xml: string, name: string) => {
     setError(null);
+    setSelectedIndex(null);
     try {
       const pts = parseGpx(xml);
       if (pts.length === 0) {
@@ -27,9 +51,10 @@ export function Analyzer() {
     setPoints(null);
     setFileName('');
     setError(null);
+    setSelectedIndex(null);
   };
 
-  if (!points) {
+  if (!points || !bounds) {
     return (
       <div className="flex w-full flex-col gap-4">
         <DropZone onFile={handleFile} onError={setError} />
@@ -61,6 +86,17 @@ export function Analyzer() {
           {badges.length > 0 && ' · ' + badges.join(' · ')}
         </p>
       </div>
+      <RouteMap
+        renderPoints={renderPoints}
+        bounds={bounds}
+        selectedIndex={selectedIndex}
+        onHover={setSelectedIndex}
+      />
+      <ElevationChart
+        renderPoints={renderPoints}
+        selectedIndex={selectedIndex}
+        onHover={setSelectedIndex}
+      />
       <button
         onClick={reset}
         className="text-sm text-on-surface-variant underline hover:text-on-surface"
