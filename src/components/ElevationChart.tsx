@@ -5,6 +5,9 @@ import type { PaceZone, TrackPoint } from '../types';
 import { cumulativeDistances } from '../lib/geo';
 import { PACE_ZONE_COLORS } from '../lib/paceZones';
 
+const HR_COLOR = '#ef4444';
+const CAD_COLOR = '#14b8a6';
+
 interface ElevationChartProps {
   renderPoints: TrackPoint[];
   selectedIndex: number | null;
@@ -20,15 +23,21 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
   const onHoverRef = useRef(onHover);
 
   const hasElevation = renderPoints.some((p) => p.ele !== undefined);
+  const hasHr = renderPoints.some((p) => p.hr !== undefined);
+  const hasCad = renderPoints.some((p) => p.cad !== undefined);
   const imperial = unit === 'mi';
 
-  const [xData, yData] = useMemo(() => {
+  const data = useMemo<uPlot.AlignedData>(() => {
     const dists = cumulativeDistances(renderPoints);
-    return [
-      imperial ? dists.map((d) => d / 1609.344) : dists.map((d) => d / 1000),
-      renderPoints.map((p) => p.ele !== undefined ? (imperial ? p.ele * 3.28084 : p.ele) : 0),
-    ];
-  }, [renderPoints, imperial]);
+    const x = imperial ? dists.map((d) => d / 1609.344) : dists.map((d) => d / 1000);
+    const ele = renderPoints.map((p) =>
+      p.ele !== undefined ? (imperial ? p.ele * 3.28084 : p.ele) : 0,
+    );
+    const series: (number | null)[][] = [x, ele];
+    if (hasHr) series.push(renderPoints.map((p) => p.hr ?? null));
+    if (hasCad) series.push(renderPoints.map((p) => p.cad ?? null));
+    return series as uPlot.AlignedData;
+  }, [renderPoints, imperial, hasHr, hasCad]);
 
   useEffect(() => { onHoverRef.current = onHover; }, [onHover]);
 
@@ -43,23 +52,34 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
     const width = containerRef.current.clientWidth || 700;
     const zones = pointZones ?? null;
 
+    const series: uPlot.Series[] = [
+      { label: '' },
+      {
+        label: imperial ? 'Elevation (ft)' : 'Elevation (m)',
+        stroke: '#7c77f0',
+        fill: 'rgba(124,119,240,0.12)',
+        width: 2,
+      },
+    ];
+    // Overlay scales auto-fit to their own data; HR gets a right axis, cadence
+    // shares the chart without its own axis to keep the right edge uncluttered.
+    if (hasHr) series.push({ label: 'HR (bpm)', stroke: HR_COLOR, width: 1.5, scale: 'hr' });
+    if (hasCad) series.push({ label: 'Cadence (spm)', stroke: CAD_COLOR, width: 1, scale: 'cad', dash: [4, 3] });
+
+    const axes: uPlot.Axis[] = [
+      { label: imperial ? 'Distance (mi)' : 'Distance (km)' },
+      { label: imperial ? 'ft' : 'm', size: 55 },
+    ];
+    if (hasHr) {
+      axes.push({ scale: 'hr', side: 1, label: 'bpm', size: 50, stroke: HR_COLOR, grid: { show: false } });
+    }
+
     const opts: uPlot.Options = {
       width,
       height: 180,
       scales: { x: { time: false } },
-      series: [
-        { label: '' },
-        {
-          label: imperial ? 'Elevation (ft)' : 'Elevation (m)',
-          stroke: '#7c77f0',
-          fill: 'rgba(124,119,240,0.12)',
-          width: 2,
-        },
-      ],
-      axes: [
-        { label: imperial ? 'Distance (mi)' : 'Distance (km)' },
-        { label: imperial ? 'ft' : 'm', size: 55 },
-      ],
+      series,
+      axes,
       cursor: { drag: { x: false, y: false } },
       hooks: {
         drawClear: [
@@ -112,7 +132,7 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
       },
     };
 
-    const u = new uPlot(opts, [xData, yData], containerRef.current);
+    const u = new uPlot(opts, data, containerRef.current);
     uplotRef.current = u;
 
     const ro = new ResizeObserver(() => {
@@ -127,7 +147,7 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
       u.destroy();
       uplotRef.current = null;
     };
-  }, [hasElevation, xData, yData, pointZones, imperial]);
+  }, [hasElevation, hasHr, hasCad, data, pointZones, imperial]);
 
   if (!hasElevation) return null;
 

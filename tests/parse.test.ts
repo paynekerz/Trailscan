@@ -31,6 +31,13 @@ describe('parseGpx — flat-run.gpx', () => {
   it('first timestamp is correct', () => {
     expect(points[0].time?.toISOString()).toBe('2024-01-15T08:00:00.000Z');
   });
+
+  it('merges gpxtpx HR/cadence back onto points by index', () => {
+    expect(points[0].hr).toBe(142);
+    expect(points[0].cad).toBe(87);
+    expect(points.every((p) => typeof p.hr === 'number')).toBe(true);
+    expect(points.every((p) => typeof p.cad === 'number')).toBe(true);
+  });
 });
 
 describe('parseGpx — big-climb.gpx', () => {

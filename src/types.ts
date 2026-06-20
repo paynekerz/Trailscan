@@ -43,3 +43,6 @@ export interface Split {
 
 // 1 = slowest (recovery), 5 = fastest (VO₂Max)
 export type PaceZone = 1 | 2 | 3 | 4 | 5;
+
+// 1 = recovery (easiest), 5 = maximum (hardest)
+export type HrZone = 1 | 2 | 3 | 4 | 5;

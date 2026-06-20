@@ -1,5 +1,6 @@
 import { gpx } from '@tmcw/togeojson';
 import type { TrackPoint } from '../types';
+import { mergeExtensions } from './extensions';
 
 export function parseGpx(xmlString: string): TrackPoint[] {
   const doc = new DOMParser().parseFromString(xmlString, 'application/xml');
@@ -53,6 +54,9 @@ export function parseGpx(xmlString: string): TrackPoint[] {
       }
     }
   }
+
+  // togeojson drops gpxtpx HR/cadence; merge them back by index. See extensions.ts.
+  mergeExtensions(points, xmlString);
 
   return points;
 }

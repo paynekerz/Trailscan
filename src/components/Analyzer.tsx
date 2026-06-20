@@ -3,10 +3,12 @@ import { DropZone } from './DropZone';
 import { RouteMap } from './RouteMap';
 import { ElevationChart } from './ElevationChart';
 import { SplitsTable } from './SplitsTable';
+import { HrZones } from './HrZones';
 import { parseGpx } from '../lib/parse';
 import { downsample } from '../lib/geo';
 import { computeSplits, computePointPaces, METERS_PER_MILE } from '../lib/metrics';
 import { getPaceZone } from '../lib/paceZones';
+import { DEFAULT_MAX_HR } from '../lib/hrZones';
 import type { PaceZone, TrackPoint } from '../types';
 
 const MAX_RENDER_POINTS = 2000;
@@ -17,6 +19,7 @@ export function Analyzer() {
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [splitUnit, setSplitUnit] = useState<'km' | 'mi'>('mi');
+  const [maxHr, setMaxHr] = useState(DEFAULT_MAX_HR);
 
   const renderPoints = useMemo(
     () => (points ? downsample(points, MAX_RENDER_POINTS) : []),
@@ -39,6 +42,7 @@ export function Analyzer() {
   const hasElevation = useMemo(() => points?.some((p) => p.ele !== undefined) ?? false, [points]);
   const hasTime = useMemo(() => points?.some((p) => p.time !== undefined) ?? false, [points]);
   const hasHr = useMemo(() => points?.some((p) => p.hr !== undefined) ?? false, [points]);
+  const hasCad = useMemo(() => points?.some((p) => p.cad !== undefined) ?? false, [points]);
 
   // Per-point pace (s/km) for renderPoints — null when time data is absent
   const pointPaces = useMemo<(number | null)[] | null>(
@@ -104,6 +108,7 @@ export function Analyzer() {
     hasElevation && 'elevation',
     hasTime && 'timestamps',
     hasHr && 'heart-rate',
+    hasCad && 'cadence',
   ].filter(Boolean);
 
   return (
@@ -130,6 +135,7 @@ export function Analyzer() {
         unit={splitUnit}
       />
       <SplitsTable splits={splits} unit={splitUnit} onUnitChange={setSplitUnit} />
+      {hasHr && <HrZones points={points} maxHr={maxHr} onMaxHrChange={setMaxHr} />}
       <button
         onClick={reset}
         className="text-sm text-on-surface-variant underline hover:text-on-surface"
