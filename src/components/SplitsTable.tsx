@@ -21,10 +21,12 @@ function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-function formatElevChange(meters: number): string {
-  const r = Math.round(meters);
-  if (r === 0) return '±0m';
-  return `${r > 0 ? '+' : ''}${r}m`;
+function formatElevChange(meters: number, unit: 'km' | 'mi'): string {
+  const val = unit === 'mi' ? meters * 3.28084 : meters;
+  const suffix = unit === 'mi' ? 'ft' : 'm';
+  const r = Math.round(val);
+  if (r === 0) return `±0${suffix}`;
+  return `${r > 0 ? '+' : ''}${r}${suffix}`;
 }
 
 export function SplitsTable({ splits, unit, onUnitChange }: SplitsTableProps) {
@@ -146,7 +148,7 @@ export function SplitsTable({ splits, unit, onUnitChange }: SplitsTableProps) {
                   {hasElevation && (
                     <td className="px-4 py-2 text-on-surface">
                       {split.elevationChangeMeters !== null
-                        ? formatElevChange(split.elevationChangeMeters)
+                        ? formatElevChange(split.elevationChangeMeters, unit)
                         : '—'}
                     </td>
                   )}

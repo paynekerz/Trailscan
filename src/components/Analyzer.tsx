@@ -127,6 +127,7 @@ export function Analyzer() {
         selectedIndex={selectedIndex}
         onHover={setSelectedIndex}
         pointZones={pointZones}
+        unit={splitUnit}
       />
       <SplitsTable splits={splits} unit={splitUnit} onUnitChange={setSplitUnit} />
       <button

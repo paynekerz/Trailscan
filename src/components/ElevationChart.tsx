@@ -10,23 +10,25 @@ interface ElevationChartProps {
   selectedIndex: number | null;
   onHover: (index: number | null) => void;
   pointZones?: (PaceZone | null)[] | null;
+  unit?: 'km' | 'mi';
 }
 
-export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZones }: ElevationChartProps) {
+export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZones, unit = 'km' }: ElevationChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const uplotRef = useRef<uPlot | null>(null);
   const selectedIndexRef = useRef<number | null>(selectedIndex);
   const onHoverRef = useRef(onHover);
 
   const hasElevation = renderPoints.some((p) => p.ele !== undefined);
+  const imperial = unit === 'mi';
 
   const [xData, yData] = useMemo(() => {
     const dists = cumulativeDistances(renderPoints);
     return [
-      dists.map((d) => d / 1000),
-      renderPoints.map((p) => p.ele ?? 0),
+      imperial ? dists.map((d) => d / 1609.344) : dists.map((d) => d / 1000),
+      renderPoints.map((p) => p.ele !== undefined ? (imperial ? p.ele * 3.28084 : p.ele) : 0),
     ];
-  }, [renderPoints]);
+  }, [renderPoints, imperial]);
 
   useEffect(() => { onHoverRef.current = onHover; }, [onHover]);
 
@@ -48,15 +50,15 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
       series: [
         { label: '' },
         {
-          label: 'Elevation (m)',
+          label: imperial ? 'Elevation (ft)' : 'Elevation (m)',
           stroke: '#7c77f0',
           fill: 'rgba(124,119,240,0.12)',
           width: 2,
         },
       ],
       axes: [
-        { label: 'Distance (km)' },
-        { label: 'm', size: 55 },
+        { label: imperial ? 'Distance (mi)' : 'Distance (km)' },
+        { label: imperial ? 'ft' : 'm', size: 55 },
       ],
       cursor: { drag: { x: false, y: false } },
       hooks: {
@@ -125,7 +127,7 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
       u.destroy();
       uplotRef.current = null;
     };
-  }, [hasElevation, xData, yData, pointZones]);
+  }, [hasElevation, xData, yData, pointZones, imperial]);
 
   if (!hasElevation) return null;
 
