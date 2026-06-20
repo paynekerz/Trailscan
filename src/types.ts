@@ -30,3 +30,16 @@ export interface TrackMetrics {
   avgPace: PaceMetric | null; // over elapsed time
   avgMovingPace: PaceMetric | null; // over moving time
 }
+
+export interface Split {
+  index: number;
+  distanceMeters: number;
+  durationSeconds: number | null;
+  pace: PaceMetric | null;
+  elevationChangeMeters: number | null;
+  startPointIndex: number;
+  endPointIndex: number;
+}
+
+// 1 = slowest (recovery), 5 = fastest (VO₂Max)
+export type PaceZone = 1 | 2 | 3 | 4 | 5;

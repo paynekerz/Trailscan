@@ -1,4 +1,4 @@
-import type { PaceMetric, TrackMetrics, TrackPoint } from '../types';
+import type { PaceMetric, Split, TrackMetrics, TrackPoint } from '../types';
 import { haversine, smooth } from './geo';
 
 // Raw GPS elevation is noisy; averaging over this many points on each side
@@ -12,7 +12,7 @@ export const ELEVATION_SMOOTHING_RADIUS = 2;
 export const MOVING_SPEED_THRESHOLD_MPS = 0.5;
 
 const METERS_PER_KM = 1000;
-const METERS_PER_MILE = 1609.344;
+export const METERS_PER_MILE = 1609.344;
 
 export function totalDistance(points: TrackPoint[]): number {
   let distance = 0;
@@ -71,6 +71,87 @@ function paceFor(distance: number, seconds: number): PaceMetric | null {
     secondsPerKm: seconds / (distance / METERS_PER_KM),
     secondsPerMile: seconds / (distance / METERS_PER_MILE),
   };
+}
+
+// Returns the pace in s/km for the incoming segment at each point.
+// Point 0 is always null (no preceding segment). Stopped or degenerate segments are null.
+export function computePointPaces(points: TrackPoint[]): (number | null)[] {
+  const paces: (number | null)[] = [null];
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    if (!a.time || !b.time) { paces.push(null); continue; }
+    const dt = (b.time.getTime() - a.time.getTime()) / 1000;
+    if (dt <= 0) { paces.push(null); continue; }
+    const d = haversine(a, b);
+    if (d < 1) { paces.push(null); continue; }
+    const mps = d / dt;
+    if (mps < MOVING_SPEED_THRESHOLD_MPS) { paces.push(null); continue; }
+    paces.push(1000 / mps);
+  }
+  return paces;
+}
+
+export function computeSplits(points: TrackPoint[], splitDistanceMeters: number): Split[] {
+  if (points.length < 2) return [];
+
+  const splits: Split[] = [];
+  let nextBoundary = splitDistanceMeters;
+  let cumulativeDist = 0;
+  let splitStartIdx = 0;
+  let splitStartCumDist = 0;
+  let splitNum = 1;
+
+  const recordSplit = (endIdx: number): void => {
+    const start = points[splitStartIdx];
+    const end = points[endIdx];
+    const splitDist = cumulativeDist - splitStartCumDist;
+    if (splitDist <= 0) return;
+
+    let durationSeconds: number | null = null;
+    if (start.time && end.time) {
+      const dt = (end.time.getTime() - start.time.getTime()) / 1000;
+      if (dt > 0) durationSeconds = dt;
+    }
+
+    const elevationChangeMeters =
+      start.ele !== undefined && end.ele !== undefined ? end.ele - start.ele : null;
+
+    const pace: PaceMetric | null =
+      durationSeconds !== null
+        ? {
+            secondsPerKm: durationSeconds / (splitDist / 1000),
+            secondsPerMile: durationSeconds / (splitDist / METERS_PER_MILE),
+          }
+        : null;
+
+    splits.push({
+      index: splitNum++,
+      distanceMeters: splitDist,
+      durationSeconds,
+      pace,
+      elevationChangeMeters,
+      startPointIndex: splitStartIdx,
+      endPointIndex: endIdx,
+    });
+
+    splitStartIdx = endIdx;
+    splitStartCumDist = cumulativeDist;
+    nextBoundary = cumulativeDist + splitDistanceMeters;
+  };
+
+  for (let i = 1; i < points.length; i++) {
+    cumulativeDist += haversine(points[i - 1], points[i]);
+    if (cumulativeDist >= nextBoundary) {
+      recordSplit(i);
+    }
+  }
+
+  if (splitStartIdx < points.length - 1) {
+    recordSplit(points.length - 1);
+  }
+
+  return splits;
 }
 
 export function computeMetrics(points: TrackPoint[]): TrackMetrics {

@@ -1,13 +1,15 @@
 import 'leaflet/dist/leaflet.css';
 import { useMemo } from 'react';
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMapEvents } from 'react-leaflet';
-import type { TrackPoint } from '../types';
+import type { PaceZone, TrackPoint } from '../types';
+import { PACE_ZONE_COLORS } from '../lib/paceZones';
 
 interface RouteMapProps {
   renderPoints: TrackPoint[];
   bounds: [[number, number], [number, number]];
   selectedIndex: number | null;
   onHover: (index: number | null) => void;
+  pointZones?: (PaceZone | null)[] | null;
 }
 
 function MapHoverListener({
@@ -40,11 +42,35 @@ function MapHoverListener({
   return null;
 }
 
-export function RouteMap({ renderPoints, bounds, selectedIndex, onHover }: RouteMapProps) {
+export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZones }: RouteMapProps) {
   const positions = useMemo<[number, number][]>(
     () => renderPoints.map((p) => [p.lat, p.lon]),
     [renderPoints],
   );
+
+  // Group consecutive same-zone segments into multi-point polylines.
+  // Zone at index i applies to the segment entering point i (i.e., segment i-1 → i).
+  const zonedPolylines = useMemo(() => {
+    if (!pointZones || renderPoints.length < 2 || pointZones.length !== renderPoints.length) {
+      return null;
+    }
+    const lines: { color: string; positions: [number, number][] }[] = [];
+    let i = 0;
+    while (i < renderPoints.length - 1) {
+      const zone = pointZones[i + 1];
+      const color = zone ? PACE_ZONE_COLORS[zone] : '#7c77f0';
+      const pts: [number, number][] = [[renderPoints[i].lat, renderPoints[i].lon]];
+      let j = i + 1;
+      while (j < renderPoints.length - 1 && pointZones[j + 1] === zone) {
+        pts.push([renderPoints[j].lat, renderPoints[j].lon]);
+        j++;
+      }
+      pts.push([renderPoints[j].lat, renderPoints[j].lon]);
+      lines.push({ color, positions: pts });
+      i = j; // overlap by one point for visual continuity
+    }
+    return lines;
+  }, [renderPoints, pointZones]);
 
   const selectedPos = selectedIndex !== null ? renderPoints[selectedIndex] : null;
 
@@ -59,10 +85,20 @@ export function RouteMap({ renderPoints, bounds, selectedIndex, onHover }: Route
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Polyline
-          positions={positions}
-          pathOptions={{ color: '#7c77f0', weight: 3, opacity: 0.9 }}
-        />
+        {zonedPolylines ? (
+          zonedPolylines.map((seg, idx) => (
+            <Polyline
+              key={idx}
+              positions={seg.positions}
+              pathOptions={{ color: seg.color, weight: 3, opacity: 0.9 }}
+            />
+          ))
+        ) : (
+          <Polyline
+            positions={positions}
+            pathOptions={{ color: '#7c77f0', weight: 3, opacity: 0.9 }}
+          />
+        )}
         <CircleMarker
           center={positions[0]}
           radius={7}

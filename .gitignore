@@ -54,3 +54,5 @@ pnpm-debug.log*
 *.tsbuildinfo
 .Badwater-135.gpx
 .gstack/
+
+Badwater-135.gpx

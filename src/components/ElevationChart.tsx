@@ -1,16 +1,18 @@
 import { useEffect, useRef, useMemo } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
-import type { TrackPoint } from '../types';
+import type { PaceZone, TrackPoint } from '../types';
 import { cumulativeDistances } from '../lib/geo';
+import { PACE_ZONE_COLORS } from '../lib/paceZones';
 
 interface ElevationChartProps {
   renderPoints: TrackPoint[];
   selectedIndex: number | null;
   onHover: (index: number | null) => void;
+  pointZones?: (PaceZone | null)[] | null;
 }
 
-export function ElevationChart({ renderPoints, selectedIndex, onHover }: ElevationChartProps) {
+export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZones }: ElevationChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const uplotRef = useRef<uPlot | null>(null);
   const selectedIndexRef = useRef<number | null>(selectedIndex);
@@ -37,6 +39,7 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover }: Elevati
     if (!containerRef.current || !hasElevation) return;
 
     const width = containerRef.current.clientWidth || 700;
+    const zones = pointZones ?? null;
 
     const opts: uPlot.Options = {
       width,
@@ -57,6 +60,29 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover }: Elevati
       ],
       cursor: { drag: { x: false, y: false } },
       hooks: {
+        drawClear: [
+          (u) => {
+            if (!zones || zones.length === 0) return;
+            const ctx = u.ctx;
+            const { top, height } = u.bbox;
+            const xArr = u.data[0] as number[];
+            const len = Math.min(zones.length, xArr.length);
+            let i = 0;
+            while (i < len) {
+              const zone = zones[i];
+              if (zone === null) { i++; continue; }
+              let j = i + 1;
+              while (j < len && zones[j] === zone) j++;
+              const x0 = u.valToPos(xArr[i], 'x', true);
+              const x1 = u.valToPos(xArr[Math.min(j, xArr.length - 1)], 'x', true);
+              ctx.save();
+              ctx.fillStyle = PACE_ZONE_COLORS[zone] + '2a';
+              ctx.fillRect(x0, top, x1 - x0, height);
+              ctx.restore();
+              i = j;
+            }
+          },
+        ],
         setCursor: [
           (u) => {
             const left = u.cursor.left ?? -1;
@@ -99,7 +125,7 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover }: Elevati
       u.destroy();
       uplotRef.current = null;
     };
-  }, [hasElevation, xData, yData]);
+  }, [hasElevation, xData, yData, pointZones]);
 
   if (!hasElevation) return null;
 

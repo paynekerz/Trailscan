@@ -2,9 +2,12 @@ import { useState, useMemo } from 'react';
 import { DropZone } from './DropZone';
 import { RouteMap } from './RouteMap';
 import { ElevationChart } from './ElevationChart';
+import { SplitsTable } from './SplitsTable';
 import { parseGpx } from '../lib/parse';
 import { downsample } from '../lib/geo';
-import type { TrackPoint } from '../types';
+import { computeSplits, computePointPaces, METERS_PER_MILE } from '../lib/metrics';
+import { getPaceZone } from '../lib/paceZones';
+import type { PaceZone, TrackPoint } from '../types';
 
 const MAX_RENDER_POINTS = 2000;
 
@@ -13,6 +16,7 @@ export function Analyzer() {
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [splitUnit, setSplitUnit] = useState<'km' | 'mi'>('mi');
 
   const renderPoints = useMemo(
     () => (points ? downsample(points, MAX_RENDER_POINTS) : []),
@@ -30,6 +34,35 @@ export function Analyzer() {
     }
     return [[minLat, minLon], [maxLat, maxLon]];
   }, [points]);
+
+  // Derive feature flags as memos so they're available before the early return
+  const hasElevation = useMemo(() => points?.some((p) => p.ele !== undefined) ?? false, [points]);
+  const hasTime = useMemo(() => points?.some((p) => p.time !== undefined) ?? false, [points]);
+  const hasHr = useMemo(() => points?.some((p) => p.hr !== undefined) ?? false, [points]);
+
+  // Per-point pace (s/km) for renderPoints — null when time data is absent
+  const pointPaces = useMemo<(number | null)[] | null>(
+    () => (hasTime && renderPoints.length > 0 ? computePointPaces(renderPoints) : null),
+    [renderPoints, hasTime],
+  );
+
+  // Map each renderPoint to its pace zone; null when pace is unavailable
+  const pointZones = useMemo<(PaceZone | null)[] | null>(
+    () =>
+      pointPaces
+        ? pointPaces.map((p) => (p !== null ? getPaceZone(p) : null))
+        : null,
+    [pointPaces],
+  );
+
+  // Per-split metrics over the full-resolution points array
+  const splits = useMemo(
+    () =>
+      points && points.length >= 2
+        ? computeSplits(points, splitUnit === 'km' ? 1000 : METERS_PER_MILE)
+        : [],
+    [points, splitUnit],
+  );
 
   const handleFile = (xml: string, name: string) => {
     setError(null);
@@ -67,10 +100,6 @@ export function Analyzer() {
     );
   }
 
-  const hasElevation = points.some((p) => p.ele !== undefined);
-  const hasTime = points.some((p) => p.time !== undefined);
-  const hasHr = points.some((p) => p.hr !== undefined);
-
   const badges = [
     hasElevation && 'elevation',
     hasTime && 'timestamps',
@@ -91,12 +120,15 @@ export function Analyzer() {
         bounds={bounds}
         selectedIndex={selectedIndex}
         onHover={setSelectedIndex}
+        pointZones={pointZones}
       />
       <ElevationChart
         renderPoints={renderPoints}
         selectedIndex={selectedIndex}
         onHover={setSelectedIndex}
+        pointZones={pointZones}
       />
+      <SplitsTable splits={splits} unit={splitUnit} onUnitChange={setSplitUnit} />
       <button
         onClick={reset}
         className="text-sm text-on-surface-variant underline hover:text-on-surface"
