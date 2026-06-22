@@ -27,10 +27,10 @@ export function HrZones({ points, maxHr, onMaxHrChange }: HrZonesProps) {
   if (total <= 0) return null;
 
   return (
-    <div className="w-full rounded-xl border border-border-subtle bg-surface-elevated p-6 text-left">
+    <div className="w-full rounded-lg border border-outline-variant/30 bg-surface-container p-6 text-left">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="text-sm font-medium text-on-surface">Heart-rate zones</h2>
-        <label className="flex items-center gap-2 text-sm text-on-surface-variant">
+        <h2 className="label-caps text-on-surface">Heart-rate zones</h2>
+        <label className="label-caps flex items-center gap-2 text-on-surface-variant">
           Max HR
           <input
             type="number"
@@ -41,7 +41,7 @@ export function HrZones({ points, maxHr, onMaxHrChange }: HrZonesProps) {
               const next = Number(e.target.value);
               if (Number.isFinite(next) && next > 0) onMaxHrChange(next);
             }}
-            className="w-16 rounded-md border border-border-subtle bg-surface px-2 py-1 text-right text-on-surface"
+            className="data-sm w-16 rounded border border-outline-variant/50 bg-surface-container-low px-2 py-1 text-right text-on-surface"
             aria-label="Maximum heart rate in beats per minute"
           />
         </label>
@@ -71,10 +71,10 @@ export function HrZones({ points, maxHr, onMaxHrChange }: HrZonesProps) {
                 style={{ backgroundColor: HR_ZONE_COLORS[zone] }}
               />
               <span className="text-on-surface">{HR_ZONE_LABELS[zone]}</span>
-              <span className="ml-auto tabular-nums text-on-surface-variant">
+              <span className="data-sm ml-auto text-on-surface-variant">
                 {formatDuration(totals[zone])}
               </span>
-              <span className="w-10 text-right tabular-nums text-on-surface-variant">
+              <span className="data-sm w-10 text-right text-on-surface-variant">
                 {pct.toFixed(0)}%
               </span>
             </li>

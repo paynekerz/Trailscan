@@ -48,31 +48,56 @@ export function DropZone({ onFile, onError }: Props) {
       onDrop={onDrop}
       onClick={() => inputRef.current?.click()}
       onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
-      className={`flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-12 py-16 text-center transition-colors ${
+      className={`group flex cursor-pointer flex-col items-center gap-4 rounded-lg border-2 border-dashed bg-surface-container-low px-12 py-16 text-center transition-colors ${
         dragging
-          ? 'border-primary bg-surface-elevated'
-          : 'border-border-subtle hover:border-primary/50 hover:bg-surface-elevated/50'
+          ? 'border-secondary-container bg-surface-container'
+          : 'border-outline-variant hover:border-secondary-container'
       }`}
     >
-      <svg
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-on-surface-variant"
+      <div
+        className={`rounded-full p-6 transition-colors ${
+          dragging
+            ? 'bg-secondary-container/10 text-secondary-container'
+            : 'bg-surface-variant text-on-surface-variant group-hover:bg-secondary-container/10 group-hover:text-secondary-container'
+        }`}
       >
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="17 8 12 3 7 8" />
-        <line x1="12" y1="3" x2="12" y2="15" />
-      </svg>
-      <p className="font-medium text-on-surface">Drop a .gpx file here</p>
-      <p className="text-sm text-on-surface-variant">or click to browse</p>
+        <svg
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <p className="text-xl font-semibold text-on-surface">Drop a .gpx file here</p>
+        <p className="text-on-surface-variant">or click to browse</p>
+      </div>
+      <div className="label-caps mt-2 flex items-center gap-2 rounded border border-primary/30 bg-primary-container/20 px-3 py-1 text-primary">
+        <svg
+          aria-hidden="true"
+          className="h-3.5 w-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        Parsed entirely in your browser
+      </div>
       <input
         ref={inputRef}
         type="file"

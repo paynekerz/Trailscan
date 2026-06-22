@@ -58,7 +58,7 @@ export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZo
     let i = 0;
     while (i < renderPoints.length - 1) {
       const zone = pointZones[i + 1];
-      const color = zone ? PACE_ZONE_COLORS[zone] : '#7c77f0';
+      const color = zone ? PACE_ZONE_COLORS[zone] : '#fa5c1c';
       const pts: [number, number][] = [[renderPoints[i].lat, renderPoints[i].lon]];
       let j = i + 1;
       while (j < renderPoints.length - 1 && pointZones[j + 1] === zone) {
@@ -75,7 +75,7 @@ export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZo
   const selectedPos = selectedIndex !== null ? renderPoints[selectedIndex] : null;
 
   return (
-    <div className="h-96 w-full overflow-hidden rounded-xl border border-border-subtle">
+    <div className="h-80 w-full overflow-hidden rounded-lg border border-outline-variant/30 md:h-[400px]">
       <MapContainer
         bounds={bounds}
         boundsOptions={{ padding: [24, 24] }}
@@ -96,7 +96,7 @@ export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZo
         ) : (
           <Polyline
             positions={positions}
-            pathOptions={{ color: '#7c77f0', weight: 3, opacity: 0.9 }}
+            pathOptions={{ color: '#fa5c1c', weight: 3, opacity: 0.9 }}
           />
         )}
         <CircleMarker

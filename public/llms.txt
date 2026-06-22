@@ -1,0 +1,26 @@
+# TrailScan
+
+> TrailScan is a free, privacy-first GPX analyzer for runners, hikers, and cyclists. Drop in a GPX file from any watch or app and instantly see a route map, elevation profile, pace zones, splits, and heart-rate data — all parsed locally in your browser.
+
+## What it does
+
+- Renders an interactive route map (OpenStreetMap tiles) with start/finish markers.
+- Plots an elevation profile vs. distance, hover-synced to the map.
+- Computes total distance, elevation gain/loss (with smoothing to remove GPS noise), elapsed time, moving time, and average pace.
+- Breaks the activity into per-kilometer or per-mile splits with pace and elevation change, highlighting fastest and slowest.
+- Shows pace-zone color bands across the route and elevation chart.
+- Reads Garmin `gpxtpx` heart-rate and cadence extensions when present, including time-in-zone summaries.
+- Exports a shareable summary card as a PNG.
+
+## Privacy
+
+TrailScan is a fully static site with no backend. GPX files are read with the browser File API and processed entirely on the user's device. Nothing is ever uploaded, stored, or transmitted to a server.
+
+## Technical
+
+- Built with Astro (static output) and React. No account or sign-up required. Free to use.
+- Supported input: GPX files (multi-track and multi-segment supported). Files with missing elevation or timestamps degrade gracefully.
+
+## Links
+
+- App: https://trailscan.vercel.app/

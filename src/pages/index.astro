@@ -1,6 +1,35 @@
 ---
 import "../styles/global.css";
 import { Analyzer } from "../components/Analyzer";
+
+const canonical = new URL("/", Astro.site).href;
+const ogImage = new URL("/og.png", Astro.site).href;
+const description =
+  "Analyze any GPX file free: route map, elevation gain, pace zones, and splits — computed privately in your browser. No upload, no signup. For runners & hikers.";
+const repoUrl = "https://github.com/paynekerz/Trailscan";
+const year = new Date().getFullYear();
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "TrailScan",
+      url: canonical,
+      description: "Free in-browser GPX analyzer for runners and hikers.",
+    },
+    {
+      "@type": "WebApplication",
+      name: "TrailScan",
+      url: canonical,
+      description,
+      applicationCategory: "SportsApplication",
+      operatingSystem: "Any",
+      browserRequirements: "Requires JavaScript.",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    },
+  ],
+};
 ---
 
 <!doctype html>
@@ -8,28 +37,132 @@ import { Analyzer } from "../components/Analyzer";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Drop in a GPX file and get a route map, elevation profile, splits, and pace zones. Parsed entirely in your browser, never uploaded."
-    />
-    <title>GPX Analyzer</title>
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#121413" />
+    <link rel="canonical" href={canonical} />
+
+    <title>TrailScan: Free GPX Analyzer for Runners &amp; Hikers</title>
+    <meta name="description" content={description} />
+
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content="TrailScan: Free GPX Analyzer for Runners & Hikers" />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="TrailScan — free GPX analyzer showing an elevation profile route line" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TrailScan: Free GPX Analyzer for Runners & Hikers" />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
   </head>
-  <body class="min-h-screen">
-    <main class="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-6 px-6 text-center">
-      <p class="text-sm font-medium uppercase tracking-widest text-primary">
-        GPX Analyzer
-      </p>
-      <h1 class="text-balance text-4xl font-bold sm:text-5xl">
-        Drop a <span class="text-primary">.gpx</span> file. See the whole run.
-      </h1>
-      <p class="max-w-xl text-balance text-on-surface-variant">
-        Route map, elevation profile, distance and gain, pace zones, splits, and
-        heart-rate when it's there. Everything runs in your browser &mdash; the
-        file never leaves your device.
-      </p>
+  <body class="flex min-h-screen flex-col bg-surface">
+    <header
+      class="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-outline-variant/30 bg-surface-container px-5 md:px-12"
+    >
+      <div class="flex items-center gap-2 text-on-surface">
+        <svg
+          aria-hidden="true"
+          class="h-6 w-6 text-secondary-container"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="6" cy="19" r="3"></circle>
+          <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
+          <circle cx="18" cy="5" r="3"></circle>
+        </svg>
+        <span class="label-caps text-base tracking-tight">TrailScan</span>
+      </div>
+      <a
+        href={repoUrl}
+        rel="noopener"
+        aria-label="View source on GitHub"
+        class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-on-surface-variant transition-colors hover:bg-surface-variant hover:text-on-surface"
+      >
+        <svg
+          aria-hidden="true"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path
+            d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.39 1.24-3.23-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.92 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 24 12.5C24 5.87 18.63.5 12 .5z"
+          ></path>
+        </svg>
+        <span class="hidden text-sm font-medium sm:inline">Source</span>
+      </a>
+    </header>
+
+    <main
+      class="mx-auto flex w-full max-w-7xl flex-grow flex-col gap-12 px-5 py-10 md:px-12"
+    >
+      <section class="flex flex-col items-center gap-4 text-center">
+        <h1
+          class="text-balance text-2xl font-bold tracking-tight md:text-[2rem] md:leading-[2.5rem]"
+        >
+          Analyze your <span class="text-secondary-container">.gpx</span> file securely.
+        </h1>
+        <p class="max-w-2xl text-balance text-on-surface-variant">
+          TrailScan delivers advanced metrics and visualization for your GPS
+          tracks &mdash; built for runners, hikers, and alpine athletes.
+          Everything runs in your browser &mdash; the file never leaves your
+          device.
+        </p>
+      </section>
+
       <div class="w-full">
         <Analyzer client:only="react" />
       </div>
+
+      <section
+        class="mx-auto max-w-2xl text-balance text-center text-sm leading-relaxed text-on-surface-variant"
+      >
+        <p>
+          <strong class="font-medium text-on-surface">TrailScan</strong> is a free
+          GPX analyzer for runners and hikers. Drop in a GPX file from any watch
+          or app to see your route on a map, elevation gain and loss, pace zones,
+          splits, and heart-rate &mdash; all calculated in your browser, so your
+          data never leaves your device.
+        </p>
+      </section>
     </main>
+
+    <footer
+      class="mt-8 flex w-full flex-col items-center justify-between gap-2 border-t border-outline-variant/30 bg-surface-container-lowest px-5 py-6 text-center md:flex-row md:px-12 md:text-left"
+    >
+      <p class="label-caps text-on-surface-variant">
+        &copy; {year} ArcLayer LLC &middot; Local processing only &middot; Your
+        data never leaves your browser
+      </p>
+      <nav class="flex items-center gap-5 text-sm text-on-surface-variant">
+        <a
+          href={repoUrl}
+          rel="noopener"
+          class="transition-colors hover:text-primary"
+        >
+          GitHub
+        </a>
+        <a
+          href=""
+          rel="noopener"
+          class="transition-colors hover:text-primary"
+        >
+          Made by Payne Kerz
+        </a>
+      </nav>
+    </footer>
   </body>
 </html>

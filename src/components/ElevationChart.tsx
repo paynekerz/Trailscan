@@ -8,6 +8,13 @@ import { PACE_ZONE_COLORS } from '../lib/paceZones';
 const HR_COLOR = '#ef4444';
 const CAD_COLOR = '#14b8a6';
 
+// uPlot canvas axes default to black; match the Rugged Utility palette + fonts.
+const AXIS_STROKE = '#c3c8c2'; // on-surface-variant
+const GRID_STROKE = 'rgba(141,146,141,0.15)';
+const TICK_STROKE = 'rgba(141,146,141,0.3)';
+const AXIS_VALUE_FONT = '11px "JetBrains Mono", ui-monospace, monospace';
+const AXIS_LABEL_FONT = '600 12px "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif';
+
 interface ElevationChartProps {
   renderPoints: TrackPoint[];
   selectedIndex: number | null;
@@ -56,8 +63,8 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
       { label: '' },
       {
         label: imperial ? 'Elevation (ft)' : 'Elevation (m)',
-        stroke: '#7c77f0',
-        fill: 'rgba(124,119,240,0.12)',
+        stroke: '#fa5c1c',
+        fill: 'rgba(250,92,28,0.15)',
         width: 2,
       },
     ];
@@ -66,12 +73,20 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
     if (hasHr) series.push({ label: 'HR (bpm)', stroke: HR_COLOR, width: 1.5, scale: 'hr' });
     if (hasCad) series.push({ label: 'Cadence (spm)', stroke: CAD_COLOR, width: 1, scale: 'cad', dash: [4, 3] });
 
+    const axisBase: Partial<uPlot.Axis> = {
+      stroke: AXIS_STROKE,
+      grid: { stroke: GRID_STROKE, width: 1 },
+      ticks: { stroke: TICK_STROKE, width: 1 },
+      font: AXIS_VALUE_FONT,
+      labelFont: AXIS_LABEL_FONT,
+    };
+
     const axes: uPlot.Axis[] = [
-      { label: imperial ? 'Distance (mi)' : 'Distance (km)' },
-      { label: imperial ? 'ft' : 'm', size: 55 },
+      { ...axisBase, label: imperial ? 'Distance (mi)' : 'Distance (km)' },
+      { ...axisBase, label: imperial ? 'ft' : 'm', size: 55 },
     ];
     if (hasHr) {
-      axes.push({ scale: 'hr', side: 1, label: 'bpm', size: 50, stroke: HR_COLOR, grid: { show: false } });
+      axes.push({ ...axisBase, scale: 'hr', side: 1, label: 'bpm', size: 50, stroke: HR_COLOR, grid: { show: false } });
     }
 
     const opts: uPlot.Options = {
@@ -152,7 +167,10 @@ export function ElevationChart({ renderPoints, selectedIndex, onHover, pointZone
   if (!hasElevation) return null;
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-border-subtle">
+    <div className="w-full overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
+      <div className="mb-3">
+        <span className="label-caps text-on-surface-variant">Elevation Profile</span>
+      </div>
       <div ref={containerRef} />
     </div>
   );
