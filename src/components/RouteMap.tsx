@@ -1,8 +1,12 @@
 import 'leaflet/dist/leaflet.css';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMapEvents } from 'react-leaflet';
 import type { PaceZone, TrackPoint } from '../types';
 import { PACE_ZONE_COLORS } from '../lib/paceZones';
+
+const PLAIN_COLOR = '#fa5c1c';
+
+type ColorMode = 'speed' | 'zones';
 
 interface RouteMapProps {
   renderPoints: TrackPoint[];
@@ -10,6 +14,32 @@ interface RouteMapProps {
   selectedIndex: number | null;
   onHover: (index: number | null) => void;
   pointZones?: (PaceZone | null)[] | null;
+  pointColors?: (string | null)[] | null;
+}
+
+// Group consecutive segments sharing a color into multi-point polylines.
+// `colorAt(k)` returns the color of the segment ending at point k (segment
+// k-1 → k), matching how pace data is indexed onto points.
+function buildSegments(
+  renderPoints: TrackPoint[],
+  colorAt: (segEndIndex: number) => string | null,
+  fallback: string,
+): { color: string; positions: [number, number][] }[] {
+  const lines: { color: string; positions: [number, number][] }[] = [];
+  let i = 0;
+  while (i < renderPoints.length - 1) {
+    const color = colorAt(i + 1) ?? fallback;
+    const pts: [number, number][] = [[renderPoints[i].lat, renderPoints[i].lon]];
+    let j = i + 1;
+    while (j < renderPoints.length - 1 && (colorAt(j + 1) ?? fallback) === color) {
+      pts.push([renderPoints[j].lat, renderPoints[j].lon]);
+      j++;
+    }
+    pts.push([renderPoints[j].lat, renderPoints[j].lon]);
+    lines.push({ color, positions: pts });
+    i = j; // overlap by one point for visual continuity
+  }
+  return lines;
 }
 
 function MapHoverListener({
@@ -42,40 +72,70 @@ function MapHoverListener({
   return null;
 }
 
-export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZones }: RouteMapProps) {
+export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZones, pointColors }: RouteMapProps) {
   const positions = useMemo<[number, number][]>(
     () => renderPoints.map((p) => [p.lat, p.lon]),
     [renderPoints],
   );
 
-  // Group consecutive same-zone segments into multi-point polylines.
-  // Zone at index i applies to the segment entering point i (i.e., segment i-1 → i).
-  const zonedPolylines = useMemo(() => {
-    if (!pointZones || renderPoints.length < 2 || pointZones.length !== renderPoints.length) {
-      return null;
+  const zonesValid =
+    !!pointZones && renderPoints.length >= 2 && pointZones.length === renderPoints.length;
+  const colorsValid =
+    !!pointColors && renderPoints.length >= 2 && pointColors.length === renderPoints.length;
+
+  // The pace arrays can be present in shape but hold only nulls when a file has
+  // timestamps that never advance (all-equal times). In that case the toggle is
+  // shown for affordance but disabled — switching modes would do nothing.
+  const hasPaceData =
+    (colorsValid && pointColors!.some((c) => c !== null)) ||
+    (zonesValid && pointZones!.some((z) => z !== null));
+
+  // Default to the continuous speed gradient when pace data exists; fall back to
+  // discrete pace zones. Both derive from the same pace data, so the toggle only
+  // shows when those arrays are present.
+  const [colorMode, setColorMode] = useState<ColorMode>('speed');
+  const showToggle = colorsValid && zonesValid;
+  const effectiveMode: ColorMode = colorMode === 'speed' && colorsValid ? 'speed' : 'zones';
+
+  const segments = useMemo(() => {
+    if (effectiveMode === 'speed' && colorsValid) {
+      return buildSegments(renderPoints, (k) => pointColors![k], PLAIN_COLOR);
     }
-    const lines: { color: string; positions: [number, number][] }[] = [];
-    let i = 0;
-    while (i < renderPoints.length - 1) {
-      const zone = pointZones[i + 1];
-      const color = zone ? PACE_ZONE_COLORS[zone] : '#fa5c1c';
-      const pts: [number, number][] = [[renderPoints[i].lat, renderPoints[i].lon]];
-      let j = i + 1;
-      while (j < renderPoints.length - 1 && pointZones[j + 1] === zone) {
-        pts.push([renderPoints[j].lat, renderPoints[j].lon]);
-        j++;
-      }
-      pts.push([renderPoints[j].lat, renderPoints[j].lon]);
-      lines.push({ color, positions: pts });
-      i = j; // overlap by one point for visual continuity
+    if (zonesValid) {
+      return buildSegments(
+        renderPoints,
+        (k) => (pointZones![k] ? PACE_ZONE_COLORS[pointZones![k] as PaceZone] : null),
+        PLAIN_COLOR,
+      );
     }
-    return lines;
-  }, [renderPoints, pointZones]);
+    return null;
+  }, [renderPoints, pointColors, pointZones, effectiveMode, colorsValid, zonesValid]);
 
   const selectedPos = selectedIndex !== null ? renderPoints[selectedIndex] : null;
 
   return (
-    <div className="h-80 w-full overflow-hidden rounded-lg border border-outline-variant/30 md:h-[400px]">
+    <div className="relative h-80 w-full overflow-hidden rounded-lg border border-outline-variant/30 md:h-[400px]">
+      {showToggle && (
+        <div className="absolute right-2 top-2 z-[1000] flex items-center gap-1 rounded-lg border border-outline-variant/50 bg-surface-container-high/90 p-1 backdrop-blur-sm">
+          {(['speed', 'zones'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setColorMode(m)}
+              disabled={!hasPaceData}
+              title={hasPaceData ? undefined : 'No pace data — needs per-point timestamps'}
+              className={`label-caps rounded px-3 py-1 transition-colors ${
+                !hasPaceData
+                  ? 'cursor-not-allowed text-on-surface-variant/40'
+                  : effectiveMode === m
+                    ? 'bg-surface-variant text-on-surface shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]'
+                    : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              {m === 'speed' ? 'Speed' : 'Zones'}
+            </button>
+          ))}
+        </div>
+      )}
       <MapContainer
         bounds={bounds}
         boundsOptions={{ padding: [24, 24] }}
@@ -85,8 +145,8 @@ export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZo
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {zonedPolylines ? (
-          zonedPolylines.map((seg, idx) => (
+        {segments ? (
+          segments.map((seg, idx) => (
             <Polyline
               key={idx}
               positions={seg.positions}
@@ -96,7 +156,7 @@ export function RouteMap({ renderPoints, bounds, selectedIndex, onHover, pointZo
         ) : (
           <Polyline
             positions={positions}
-            pathOptions={{ color: '#fa5c1c', weight: 3, opacity: 0.9 }}
+            pathOptions={{ color: PLAIN_COLOR, weight: 3, opacity: 0.9 }}
           />
         )}
         <CircleMarker

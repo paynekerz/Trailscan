@@ -80,6 +80,25 @@ html {
   background-clip: padding-box;
 }
 
+/* View swap (DropZone -> analysis) fades. Sequential: intro fades out via a
+   Tailwind opacity transition, then the analysis view fades in on mount. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 250ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
+}
+
 /* uPlot draws axis text on canvas and the legend as HTML — both default to
    black, so pull them onto our palette/fonts. */
 .u-legend {

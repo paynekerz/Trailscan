@@ -1,8 +1,9 @@
-import { useState, useMemo, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { DropZone } from './DropZone';
 import { SplitsTable } from './SplitsTable';
 import { HrZones } from './HrZones';
 import { SummaryCard } from './SummaryCard';
+import { Playback } from './Playback';
 
 // Defer Leaflet + uPlot: these only render after a file is parsed, so their
 // chunks must not load on initial paint (Core Web Vitals — keep LCP/JS lean).
@@ -14,12 +15,19 @@ import { parseGpx } from '../lib/parse';
 import { downsample } from '../lib/geo';
 import { computeSplits, computePointPaces, computeMetrics, METERS_PER_MILE } from '../lib/metrics';
 import { getPaceZone } from '../lib/paceZones';
+import { paceColors } from '../lib/colorScale';
 import { DEFAULT_MAX_HR } from '../lib/hrZones';
 import type { PaceMetric, PaceZone, TrackMetrics, TrackPoint } from '../types';
 
 const MAX_RENDER_POINTS = 2000;
 const METERS_PER_KM = 1000;
 const FT_PER_METER = 3.28084;
+
+// Intro fade-out duration before the analysis view mounts — keep in sync with
+// the `duration-200` on the intro wrapper below.
+const INTRO_FADE_MS = 200;
+
+type Stage = 'intro' | 'leaving' | 'analysis';
 
 function fmtDuration(s: number): string {
   const h = Math.floor(s / 3600);
@@ -43,8 +51,14 @@ interface QuickStat {
   accent?: boolean;
 }
 
+const PLACEHOLDER = '—';
+
+// Always returns the same four tiles so the 2×2 grid is stable; unavailable
+// metrics render a "—" placeholder rather than disappearing.
 function buildQuickStats(metrics: TrackMetrics, unit: 'km' | 'mi'): QuickStat[] {
-  const stats: QuickStat[] = [
+  const time = metrics.movingTime ?? metrics.elapsedTime;
+  const pace = metrics.avgMovingPace ?? metrics.avgPace;
+  return [
     {
       label: 'Distance',
       value:
@@ -54,25 +68,28 @@ function buildQuickStats(metrics: TrackMetrics, unit: 'km' | 'mi'): QuickStat[] 
       suffix: unit,
       accent: true,
     },
-  ];
-  if (metrics.movingTime !== null)
-    stats.push({ label: 'Moving Time', value: fmtDuration(metrics.movingTime) });
-  else if (metrics.elapsedTime !== null)
-    stats.push({ label: 'Time', value: fmtDuration(metrics.elapsedTime) });
-  if (metrics.elevationGain !== null)
-    stats.push({
+    {
+      label: metrics.movingTime !== null ? 'Moving Time' : 'Time',
+      value: time !== null ? fmtDuration(time) : PLACEHOLDER,
+    },
+    {
       label: 'Elev Gain',
-      value: String(
-        unit === 'mi'
-          ? Math.round(metrics.elevationGain * FT_PER_METER)
-          : Math.round(metrics.elevationGain),
-      ),
-      suffix: unit === 'mi' ? 'ft' : 'm',
-    });
-  const pace = metrics.avgMovingPace ?? metrics.avgPace;
-  if (pace)
-    stats.push({ label: 'Avg Pace', value: fmtPaceVal(pace, unit), suffix: `/${unit}` });
-  return stats;
+      value:
+        metrics.elevationGain !== null
+          ? String(
+              unit === 'mi'
+                ? Math.round(metrics.elevationGain * FT_PER_METER)
+                : Math.round(metrics.elevationGain),
+            )
+          : PLACEHOLDER,
+      suffix: metrics.elevationGain !== null ? (unit === 'mi' ? 'ft' : 'm') : undefined,
+    },
+    {
+      label: 'Avg Pace',
+      value: pace ? fmtPaceVal(pace, unit) : PLACEHOLDER,
+      suffix: pace ? `/${unit}` : undefined,
+    },
+  ];
 }
 
 export function Analyzer() {
@@ -83,6 +100,7 @@ export function Analyzer() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [splitUnit, setSplitUnit] = useState<'km' | 'mi'>('mi');
   const [maxHr, setMaxHr] = useState(DEFAULT_MAX_HR);
+  const [stage, setStage] = useState<Stage>('intro');
 
   const renderPoints = useMemo(
     () => (points ? downsample(points, MAX_RENDER_POINTS) : []),
@@ -145,6 +163,12 @@ export function Analyzer() {
     [pointPaces],
   );
 
+  // Continuous speed gradient color per renderPoint; null when pace is absent
+  const pointColors = useMemo<(string | null)[] | null>(
+    () => (pointPaces ? paceColors(pointPaces) : null),
+    [pointPaces],
+  );
+
   // Per-split metrics over the full-resolution points array
   const splits = useMemo(
     () =>
@@ -153,6 +177,26 @@ export function Analyzer() {
         : [],
     [points, splitUnit],
   );
+
+  // Drive the sequential view swap: once parsed data exists, fade the intro
+  // out, then mount the analysis view (which fades in on its own). Reset back
+  // to the intro when the data is cleared ("Load a different file").
+  useEffect(() => {
+    if (points && bounds && stage === 'intro') {
+      setStage('leaving');
+    }
+    if ((!points || !bounds) && stage !== 'intro') {
+      setStage('intro');
+    }
+  }, [points, bounds, stage]);
+
+  // Schedule the leaving -> analysis swap separately so the timeout isn't
+  // cleared by the intro -> leaving state change that started it.
+  useEffect(() => {
+    if (stage !== 'leaving') return;
+    const t = setTimeout(() => setStage('analysis'), INTRO_FADE_MS);
+    return () => clearTimeout(t);
+  }, [stage]);
 
   const handleFile = (xml: string, name: string) => {
     setError(null);
@@ -184,10 +228,16 @@ export function Analyzer() {
     setLoading(false);
   };
 
-  if (!points || !bounds) {
+  if (stage !== 'analysis' || !points || !bounds) {
+    // Keep the spinner (not the DropZone) on screen while the intro fades out.
+    const showSpinner = loading || stage === 'leaving';
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-        {loading ? (
+      <div
+        className={`mx-auto flex w-full max-w-3xl flex-col gap-4 transition-opacity duration-200 ${
+          stage === 'leaving' ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        {showSpinner ? (
           <div
             role="status"
             aria-label="Parsing file"
@@ -226,7 +276,7 @@ export function Analyzer() {
   const quickStats = metrics ? buildQuickStats(metrics, splitUnit) : [];
 
   return (
-    <div className="flex w-full flex-col gap-6 border-t border-outline-variant/30 pt-8">
+    <div className="animate-fade-in flex w-full flex-col gap-6 border-t border-outline-variant/30 pt-8">
       {/* File header */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
@@ -276,6 +326,7 @@ export function Analyzer() {
               selectedIndex={selectedIndex}
               onHover={setSelectedIndex}
               pointZones={pointZones}
+              pointColors={pointColors}
             />
             <ElevationChart
               renderPoints={renderPoints}
@@ -285,9 +336,20 @@ export function Analyzer() {
               unit={splitUnit}
             />
           </Suspense>
+          <Playback
+            length={renderPoints.length}
+            value={selectedIndex}
+            onSeek={setSelectedIndex}
+            renderPoints={renderPoints}
+            unit={splitUnit}
+          />
         </div>
 
-        <div className="flex flex-col gap-6">
+        {/* On lg the sidebar is absolutely positioned into its grid cell so it
+            doesn't drive the row height — the row matches the map column, and
+            SplitsTable scrolls to fill exactly that height. */}
+        <div className="relative">
+        <div className="flex flex-col gap-6 lg:absolute lg:inset-0 lg:min-h-0">
           {quickStats.length > 0 && (
             <div className="grid grid-cols-2 gap-4">
               {quickStats.map((stat) => (
@@ -309,6 +371,7 @@ export function Analyzer() {
             </div>
           )}
           <SplitsTable splits={splits} unit={splitUnit} />
+        </div>
         </div>
       </div>
 

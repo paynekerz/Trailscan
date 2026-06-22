@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TrailScan">
-  <rect width="32" height="32" rx="7" fill="#111921" />
-  <path d="M4 22 L11 14 L16 18 L22 8 L28 13" fill="none" stroke="#4ba3f7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="22" cy="8" r="2.6" fill="#4ba3f7" />
+  <rect width="32" height="32" rx="7" fill="#121413" />
+  <g transform="translate(16 16) scale(0.9) translate(-12 -12)" fill="none" stroke="#fa5c1c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6" cy="19" r="3" />
+    <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
+    <circle cx="18" cy="5" r="3" />
+  </g>
 </svg>

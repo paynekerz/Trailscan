@@ -5,9 +5,11 @@ import {
   computeMetrics,
   elapsedTime,
   elevationGainLoss,
+  instantPaceAt,
   movingTime,
   totalDistance,
 } from '../src/lib/metrics';
+import { cumulativeDistances } from '../src/lib/geo';
 import type { TrackPoint } from '../src/types';
 
 const fixture = (name: string) =>
@@ -117,6 +119,41 @@ describe('moving time vs elapsed time', () => {
   });
 });
 
+describe('instantPaceAt — live playback readout', () => {
+  // 10 points, 30s apart. First half ~3.33 m/s (5:00/km), second half ~6.67 m/s
+  // (2:30/km) by doubling the per-segment latitude step.
+  const points: TrackPoint[] = Array.from({ length: 10 }, (_, i) => ({
+    lat: 40.0 + (i < 5 ? i * 0.001 : 0.005 + (i - 5) * 0.002),
+    lon: -105.0,
+    time: new Date(Date.parse('2024-01-01T00:00:00Z') + i * 30_000),
+  }));
+  const dists = cumulativeDistances(points);
+
+  it('reads a faster pace in the fast half than the slow half', () => {
+    const slow = instantPaceAt(points, dists, 2)!;
+    const fast = instantPaceAt(points, dists, 7)!;
+    expect(slow.secondsPerKm).toBeGreaterThan(fast.secondsPerKm);
+    expect(fast.secondsPerKm).toBeCloseTo(slow.secondsPerKm / 2, -1);
+  });
+
+  it('returns null while stopped', () => {
+    const stopped: TrackPoint[] = [
+      { lat: 40.0, lon: -105.0, time: new Date('2024-01-01T00:00:00Z') },
+      { lat: 40.0, lon: -105.0, time: new Date('2024-01-01T00:00:30Z') },
+      { lat: 40.0, lon: -105.0, time: new Date('2024-01-01T00:01:00Z') },
+    ];
+    expect(instantPaceAt(stopped, cumulativeDistances(stopped), 1)).toBeNull();
+  });
+
+  it('returns null when timestamps are absent', () => {
+    const noTime: TrackPoint[] = [
+      { lat: 40.0, lon: -105.0 },
+      { lat: 40.001, lon: -105.0 },
+    ];
+    expect(instantPaceAt(noTime, cumulativeDistances(noTime), 1)).toBeNull();
+  });
+});
+
 describe('metrics — missing timestamps', () => {
   const points: TrackPoint[] = [
     { lat: 40.0, lon: -105.0, ele: 1000 },
@@ -131,5 +168,27 @@ describe('metrics — missing timestamps', () => {
     expect(m.avgMovingPace).toBeNull();
     expect(m.distance).toBeGreaterThan(0);
     expect(m.elevationGain).toBeCloseTo(10, 6);
+  });
+});
+
+describe('metrics — all timestamps identical (route export)', () => {
+  // Every point shares one timestamp (e.g. Badwater-135.gpx) — no real elapsed
+  // time, so every time-derived metric must degrade to null, not a bogus 0:00.
+  const t = new Date('2023-07-11T18:16:01Z');
+  const points: TrackPoint[] = [
+    { lat: 36.0, lon: -116.0, ele: 100, time: t },
+    { lat: 36.001, lon: -116.0, ele: 110, time: t },
+    { lat: 36.002, lon: -116.0, ele: 120, time: t },
+  ];
+
+  it('treats elapsed time as absent and yields no pace, but keeps distance/elevation', () => {
+    const m = computeMetrics(points);
+    expect(elapsedTime(points)).toBeNull();
+    expect(m.elapsedTime).toBeNull();
+    expect(m.movingTime).toBeNull();
+    expect(m.avgPace).toBeNull();
+    expect(m.avgMovingPace).toBeNull();
+    expect(m.distance).toBeGreaterThan(0);
+    expect(m.elevationGain).toBeCloseTo(20, 6);
   });
 });

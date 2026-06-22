@@ -53,7 +53,7 @@ export function SplitsTable({ splits, unit }: SplitsTableProps) {
       : null;
 
   return (
-    <div className="flex flex-grow flex-col overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container">
+    <div className="flex min-h-0 flex-grow flex-col overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container">
       <div className="flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-high px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="label-caps text-on-surface">Splits</span>
@@ -97,8 +97,15 @@ export function SplitsTable({ splits, unit }: SplitsTableProps) {
         </svg>
       </div>
 
-      <div id="splits-table-content" className={open ? '' : 'hidden sm:block'}>
-        <div className="max-h-[320px] overflow-auto">
+      <div
+        id="splits-table-content"
+        className={
+          open
+            ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+            : 'hidden sm:flex sm:min-h-0 sm:flex-1 sm:flex-col sm:overflow-hidden'
+        }
+      >
+        <div className="min-h-0 flex-1 overflow-auto max-h-[420px] lg:max-h-none">
           <table className="w-full text-left">
             <thead className="label-caps sticky top-0 border-b border-outline-variant/30 bg-surface-container text-on-surface-variant">
               <tr>

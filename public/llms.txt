@@ -1,16 +1,21 @@
 # TrailScan
 
-> TrailScan is a free, privacy-first GPX analyzer for runners, hikers, and cyclists. Drop in a GPX file from any watch or app and instantly see a route map, elevation profile, pace zones, splits, and heart-rate data — all parsed locally in your browser.
+> TrailScan is a free, privacy-first GPX analyzer for runners, hikers, and cyclists. Drop in a GPX file from any watch or app and instantly see a route map, elevation profile, pace zones, splits, and heart-rate data — all parsed locally in your browser, nothing uploaded.
 
 ## What it does
 
-- Renders an interactive route map (OpenStreetMap tiles) with start/finish markers.
-- Plots an elevation profile vs. distance, hover-synced to the map.
-- Computes total distance, elevation gain/loss (with smoothing to remove GPS noise), elapsed time, moving time, and average pace.
-- Breaks the activity into per-kilometer or per-mile splits with pace and elevation change, highlighting fastest and slowest.
-- Shows pace-zone color bands across the route and elevation chart.
-- Reads Garmin `gpxtpx` heart-rate and cadence extensions when present, including time-in-zone summaries.
-- Exports a shareable summary card as a PNG.
+- Renders an interactive route map (OpenStreetMap tiles) with start/finish markers and a hover marker synced to the elevation chart.
+- Plots an elevation profile vs. distance, hover-synced to the map in both directions.
+- Computes total distance, elevation gain/loss (smoothed to remove GPS noise), elapsed time, moving time, and average pace.
+- Breaks the activity into per-kilometer or per-mile splits with pace and elevation change, highlighting the fastest and slowest, with a km/mi unit toggle.
+- Colors the route and elevation chart by pace zone.
+- Reads Garmin `gpxtpx` heart-rate and cadence extensions when present, including an editable-max-HR time-in-zone summary.
+- Exports a shareable summary card as a PNG (headline stats + route thumbnail).
+- Degrades gracefully: files missing elevation, timestamps, or sensor data still render every metric that can be computed, and unavailable metrics are hidden rather than faked.
+
+## Design
+
+TrailScan uses a "Rugged Utility" interface — a high-contrast, tactical-equipment aesthetic built for serious outdoor athletes. Deep obsidian background, sage-green structural brand color, high-vis orange reserved for active and critical accents. Hanken Grotesk for UI text and JetBrains Mono for all numeric telemetry so digits stay aligned. Depth comes from tonal layering and 1px borders, never drop shadows.
 
 ## Privacy
 
@@ -18,9 +23,21 @@ TrailScan is a fully static site with no backend. GPX files are read with the br
 
 ## Technical
 
-- Built with Astro (static output) and React. No account or sign-up required. Free to use.
+- Built with Astro (static output) and React. Tailwind v4 (CSS-first tokens). No account or sign-up required. Free to use.
+- The parse → metrics → render pipeline is a chain of pure functions over a normalized `TrackPoint[]`. Metrics use full-resolution points; the map and chart render a downsampled array for performance on long tracks.
 - Supported input: GPX files (multi-track and multi-segment supported). Files with missing elevation or timestamps degrade gracefully.
+
+## Roadmap (planned, not yet shipped)
+
+These features are on the roadmap and not currently available in the app:
+
+- Gradient-colored route polyline (by speed, grade, or HR) with animated playback along the track.
+- Multi-file "ghost race": overlay two activities on the same route and see where time was won or lost.
+- 3D flythrough of the route using elevation-exaggerated terrain.
+- Geographic statistics: highest/lowest point, max grade, sinuosity, loop vs. out-and-back detection, grade distribution, and OpenStreetMap trail context (surface, difficulty) via the Overpass API.
+- Grade-adjusted pace (GAP), automatic climb/segment detection, and TCX/FIT input support.
 
 ## Links
 
 - App: https://trailscan.vercel.app/
+- Source: https://github.com/paynekerz/Trailscan

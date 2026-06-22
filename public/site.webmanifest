@@ -4,8 +4,8 @@
   "description": "Free in-browser GPX analyzer: route map, elevation profile, pace zones, and splits. Your file never leaves your device.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111921",
-  "theme_color": "#111921",
+  "background_color": "#121413",
+  "theme_color": "#121413",
   "icons": [
     {
       "src": "/favicon-192.png",

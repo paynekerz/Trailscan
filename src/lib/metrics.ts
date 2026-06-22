@@ -47,7 +47,11 @@ export function elapsedTime(points: TrackPoint[]): number | null {
   const start = points[0].time;
   const end = points[points.length - 1].time;
   if (!start || !end) return null;
-  return (end.getTime() - start.getTime()) / 1000;
+  // A track whose every <time> is identical (route exports, manually-stamped
+  // files) has no real elapsed time — treat it as absent, not zero, so all
+  // time-derived metrics degrade together instead of showing a bogus 0:00.
+  const seconds = (end.getTime() - start.getTime()) / 1000;
+  return seconds > 0 ? seconds : null;
 }
 
 export function movingTime(points: TrackPoint[]): number | null {
@@ -90,6 +94,42 @@ export function computePointPaces(points: TrackPoint[]): (number | null)[] {
     paces.push(1000 / mps);
   }
   return paces;
+}
+
+// Smoothed instantaneous pace at a point, for a live playback readout. The
+// window expands symmetrically until it spans at least minWindowSeconds so the
+// number doesn't jitter on a single noisy GPS segment. Distances come from a
+// precomputed cumulative array (same indexing as points). Null when stopped,
+// degenerate, or time is unavailable.
+export function instantPaceAt(
+  points: TrackPoint[],
+  cumulativeDist: number[],
+  index: number,
+  minWindowSeconds = 4,
+): PaceMetric | null {
+  const n = points.length;
+  if (n < 2 || index < 0 || index >= n || !points[index].time) return null;
+
+  let lo = index;
+  let hi = index;
+  for (;;) {
+    const loT = points[lo].time;
+    const hiT = points[hi].time;
+    if (!loT || !hiT) return null;
+    if ((hiT.getTime() - loT.getTime()) / 1000 >= minWindowSeconds) break;
+    const canLo = lo > 0;
+    const canHi = hi < n - 1;
+    if (!canLo && !canHi) break;
+    if (canLo) lo--;
+    if (canHi) hi++;
+  }
+
+  const dt = (points[hi].time!.getTime() - points[lo].time!.getTime()) / 1000;
+  const dd = cumulativeDist[hi] - cumulativeDist[lo];
+  if (dt <= 0 || dd <= 0) return null;
+  const mps = dd / dt;
+  if (mps < MOVING_SPEED_THRESHOLD_MPS) return null;
+  return { secondsPerKm: METERS_PER_KM / mps, secondsPerMile: METERS_PER_MILE / mps };
 }
 
 export function computeSplits(points: TrackPoint[], splitDistanceMeters: number): Split[] {
