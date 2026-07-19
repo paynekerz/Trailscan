@@ -4,10 +4,13 @@ import { SplitsTable } from './SplitsTable';
 import { HrZones } from './HrZones';
 import { SummaryCard } from './SummaryCard';
 import { Playback } from './Playback';
+import { GhostRace } from './GhostRace';
 
 // Defer Leaflet + uPlot: these only render after a file is parsed, so their
 // chunks must not load on initial paint (Core Web Vitals — keep LCP/JS lean).
-const RouteMap = lazy(() => import('./RouteMap').then((m) => ({ default: m.RouteMap })));
+// MapPanel pulls in RouteMap (Leaflet); Three.js stays in a further-deferred
+// chunk it only loads when the 3D view is opened.
+const MapPanel = lazy(() => import('./MapPanel').then((m) => ({ default: m.MapPanel })));
 const ElevationChart = lazy(() =>
   import('./ElevationChart').then((m) => ({ default: m.ElevationChart })),
 );
@@ -320,13 +323,14 @@ export function Analyzer() {
               <div className="h-[360px] w-full animate-pulse rounded-lg border border-outline-variant/30 bg-surface-container" />
             }
           >
-            <RouteMap
+            <MapPanel
               renderPoints={renderPoints}
               bounds={bounds}
               selectedIndex={selectedIndex}
               onHover={setSelectedIndex}
               pointZones={pointZones}
               pointColors={pointColors}
+              hasElevation={hasElevation}
             />
             <ElevationChart
               renderPoints={renderPoints}
@@ -376,6 +380,7 @@ export function Analyzer() {
       </div>
 
       {hasHr && <HrZones points={points} maxHr={maxHr} onMaxHrChange={setMaxHr} />}
+      <GhostRace primaryPoints={points} primaryName={fileName} unit={splitUnit} />
       {metrics && (
         <SummaryCard
           fileName={fileName}
