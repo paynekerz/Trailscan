@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { Analyzer } from "../components/Analyzer";
+import Analytics from "@vercel/analytics/astro";
 
 const canonical = new URL("/", Astro.site).href;
 const ogImage = new URL("/og.png", Astro.site).href;
@@ -164,5 +165,7 @@ const jsonLd = {
         </a>
       </nav>
     </footer>
+
+    <Analytics />
   </body>
 </html>
